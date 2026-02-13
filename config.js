@@ -191,7 +191,7 @@ const baseConfig = {
     "_I am alive! (use .setalive help for custom alive msg)_",
   BLOCK_CHAT: process.env.BLOCK_CHAT || "",
   PM_ANTISPAM: convertToBool(process.env.PM_ANTISPAM) || "",
-  ALWAYS_ONLINE: convertToBool(process.env.ALWAYS_ONLINE) || false,
+  ALWAYS_ONLINE: convertToBool(process.env.ALWAYS_ONLINE) || true,
   MANGLISH_CHATBOT: convertToBool(process.env.MANGLISH_CHATBOT) || false,
   ADMIN_ACCESS: convertToBool(process.env.ADMIN_ACCESS) || false,
   PLATFORM: isHeroku
@@ -411,5 +411,6 @@ Object.defineProperty(config, "debug", {
 });
 
 module.exports = config;
+
 
 
