@@ -53,7 +53,7 @@ A lightweight WhatsApp bot framework with multi-session support and extensive co
 ```bash
 npm install -g yarn pm2
 git clone https://github.com/calebdevx/achekxbot-md.git
-cd raganork-md
+cd achekxbot-md
 ````
 
 ### Install Dependencies
