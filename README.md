@@ -1,4 +1,3 @@
-
 # AchekXBot-MD
 
 <p align="center">
@@ -53,7 +52,7 @@ A lightweight WhatsApp bot framework with multi-session support and extensive co
 
 ```bash
 npm install -g yarn pm2
-git clone https://github.com/souravkl11/raganork-md.git
+git clone https://github.com/calebdevx/achekxbot-md.git
 cd raganork-md
 ````
 
@@ -107,10 +106,10 @@ npm start
 
 ```bash
 # Stop bot
-pm2 stop raganork-md
+pm2 stop achekxbot-md
 
 # Restart bot
-pm2 restart raganork-md
+pm2 restart achekxbot-md
 ```
 
 ## Commands
