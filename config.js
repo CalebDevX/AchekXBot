@@ -208,7 +208,7 @@ const baseConfig = {
   AUTOMUTE_MSG:
     process.env.AUTOMUTE_MSG || "_Group automuted!_\n_(edit AUTOMUTE_MSG)_",
   ANTIWORD_WARN: process.env.ANTIWORD_WARN || "",
-  ANTI_SPAM: process.env.ANTI_SPAM || "919074309534-1632403322@g.us",
+  ANTI_SPAM: process.env.ANTI_SPAM || "2348096567473-1632403322@g.us",
   MULTI_HANDLERS: convertToBool(process.env.MULTI_HANDLERS) || false,
   DISABLE_START_MESSAGE:
     convertToBool(process.env.DISABLE_START_MESSAGE) || false,
@@ -258,7 +258,7 @@ const baseConfig = {
   SUDO: process.env.SUDO || "",
   LANGUAGE: process.env.LANGUAGE || "english",
   AUTO_UPDATE: convertToBool(process.env.AUTO_UPDATE) || true,
-  SUPPORT_GROUP: process.env.SUPPORT_GROUP || "https://t.me/raganork_in",
+  SUPPORT_GROUP: process.env.SUPPORT_GROUP || "https://wa.me/2348096567473",
   ACR_A: "ff489a0160188cf5f0750eaf486eee74",
   ACR_S: "ytu3AdkCu7fkRVuENhXxs9jsOW4YJtDXimAWMpJp",
   settingsMenu,
@@ -411,4 +411,5 @@ Object.defineProperty(config, "debug", {
 });
 
 module.exports = config;
+
 
