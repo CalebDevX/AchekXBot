@@ -1,4 +1,4 @@
-# Raganork-MD
+# AchekXBot-MD
 
 <p align="center">
   <a href="https://raganork.site">
@@ -24,7 +24,7 @@ A lightweight WhatsApp bot framework with multi-session support and extensive co
 
 <p align="center">
   <a href="https://raganork.site">
-    <img src="https://i.ibb.co/XkdZ3xYQ/temp.jpg" alt="Get Session" width="200"/>
+    <img src="https://i.ibb.co/XkdZ3xYQ/temp.jpg" alt="Get Session" width="100"/>
   </a>
 </p>
 
@@ -155,4 +155,5 @@ GPL License - See LICENSE file for details.
 ---
 
 **Note:** Some files are obfuscated for security reasons and should not be modified.
+
 
