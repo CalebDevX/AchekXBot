@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: AchekBot
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SESSION
+        value: "RGNK~LaA1kdMI"
+      - key: DATABASE_URL
+        value: "postgresql://achekbot_user:NE4hoU6L9kH5YSrfTA1sa9YyBoFETbu0@dpg-d6avpcemcj7s73enu9d0-a/achekbot"
+      - key: SUDO
+        value: "2348096567473" # Put your phone number here (no + sign)
+      - key: STICKER_PACKNAME
+        value: "Caleb-MD"
