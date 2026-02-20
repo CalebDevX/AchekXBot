@@ -3,7 +3,7 @@ services:
     name: AchekBot
     runtime: docker
     region: oregon
-    plan: free
+    plan: paid
     dockerfilePath: ./Dockerfile
     envVars:
       - key: SESSION
