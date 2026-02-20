@@ -365,28 +365,42 @@ Module(
 ╰═════════════════⊷
 
 ${cmdmenu}`;
+
+    // 🎯 Channel Forwarding Setup (Keeps your images exactly as they were!)
+    const channelContext = {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363402198872825@newsletter",
+        newsletterName: "Achek Digital Solutions",
+        serverMessageId: -1
+      }
+    };
+
     try {
-      if (
-        botImageLink === path.join(__dirname, "utils", "images", "default.png")
-      ) {
+      if (botImageLink === path.join(__dirname, "utils", "images", "default.png")) {
         await message.client.sendMessage(message.jid, {
           image: fs.readFileSync(botImageLink),
           caption: menu,
+          contextInfo: channelContext
         });
       } else {
         await message.client.sendMessage(message.jid, {
           image: { url: botImageLink },
           caption: menu,
+          contextInfo: channelContext
         });
       }
     } catch (error) {
       console.error("Error sending menu:", error);
       await message.client.sendMessage(message.jid, {
         text: menu,
+        contextInfo: channelContext
       });
     }
   }
 );
+
 Module(
   {
     pattern: "games ?(.*)",
@@ -538,6 +552,7 @@ Module(
     }
   }
 );
+
 Module(
   {
     pattern: "testalive",
