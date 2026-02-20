@@ -27,7 +27,7 @@ async function main() {
   ensureTempDir();
   suppressLibsignalLogs();
   
-  console.log(`--- Caleb AchekBot v${require("./package.json").version} ---`);
+  console.log(`--- AchekBot v${require("./package.json").version} ---`);
   console.log(`- Configured sessions: ${SESSION.length > 0 ? SESSION.join(", ") : "None"}`);
   
   if (SESSION.length === 0) {
@@ -94,7 +94,7 @@ async function main() {
         res.end("OK");
       } else {
         res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("Caleb AchekBot is running!");
+        res.end("AchekBot is running!");
       }
     });
 
@@ -116,3 +116,4 @@ main().catch((error) => {
   logger.fatal({ err: error }, fatalMsg);
   process.exit(1);
 });
+
