@@ -3,10 +3,9 @@ const config = require("../config");
 
 Module(
   {
-    on: "start", // 🎯 Triggers perfectly the moment the bot comes online!
-    fromMe: true,
+    on: "start",
   },
-  async (message) => {
+  async (clientObj) => {
     try {
       // Calculate disabled commands
       const disabledCount = (config.DISABLED_COMMANDS && typeof config.DISABLED_COMMANDS === "string") 
@@ -28,14 +27,17 @@ Module(
         `_PM blocker_ ${config.PMB_VAR ? "✅" : "❌"}\n` +
         `_Disabled commands:_  *${disabledCount}*️⃣\n`;
 
-      // Get your bot's own phone number to send the message to
-      const botNumber = message.client.user.id.split(":")[0] + "@s.whatsapp.net";
+      // 🎯 CORRECTED: Extract the client and user correctly for the 'start' event
+      const botClient = clientObj.user ? clientObj : clientObj.client;
+      if (!botClient || !botClient.user) return; // Failsafe
+
+      const botNumber = botClient.user.id.split(":")[0] + "@s.whatsapp.net";
 
       // Send the custom message forwarded from your Channel
-      await message.client.sendMessage(botNumber, {
+      await botClient.sendMessage(botNumber, {
         text: startupText,
         contextInfo: {
-          forwardingScore: 999, // Triggers the "Forwarded" tag
+          forwardingScore: 999, 
           isForwarded: true,
           forwardedNewsletterMessageInfo: {
             newsletterJid: "120363402198872825@newsletter", // Your Achek Digital Solutions Channel
@@ -45,7 +47,7 @@ Module(
         }
       });
     } catch (error) {
-      console.error("Failed to send custom startup message:", error);
+      console.error("Failed to send custom startup message:", error.message);
     }
   }
 );
