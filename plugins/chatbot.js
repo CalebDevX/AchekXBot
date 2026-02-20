@@ -8,12 +8,11 @@ const { callGenerativeAI } = require("./utils/misc");
 
 const API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-// 2026 Modernised Model Stack
+// 🎯 CORRECTED: Real, active Gemini models 
 const models = [
-  "gemini-3.1-pro-preview", 
-  "gemini-3-flash",         
-  "gemini-3-pro",           
-  "gemini-3-deep-think",    
+  "gemini-2.5-flash", // The newest stable and fast model
+  "gemini-2.0-flash", // Excellent fallback
+  "gemini-1.5-pro",   // Heavy reasoning fallback
 ];
 
 const chatbotStates = new Map();
@@ -29,7 +28,6 @@ let globalSystemPrompt =
 
 async function initChatbotData() {
   try {
-    // Load enabled chats
     const chatbotData = config.CHATBOT || "";
     if (chatbotData) {
       chatbotData.split(",").filter((jid) => jid.trim()).forEach((jid) => {
@@ -38,7 +36,6 @@ async function initChatbotData() {
       });
     }
 
-    // Load explicitly disabled chats so global settings don't override them
     const chatbotOffData = config.CHATBOT_OFF || "";
     if (chatbotOffData) {
       chatbotOffData.split(",").filter((jid) => jid.trim()).forEach((jid) => {
@@ -79,12 +76,12 @@ async function saveSystemPrompt(prompt) {
   }
 }
 
-async function reportToSudo(client, error, chatJid) {
+async function reportToSudo(client, errorMessage, chatJid) {
   try {
     const sudoUsers = config.SUDO ? config.SUDO.split(",") : [];
     if (sudoUsers.length > 0) {
       const primarySudo = sudoUsers[0] + "@s.whatsapp.net";
-      const report = `⚠️ *AchekBot AI Error*\n\n*Chat:* \`${chatJid}\`\n*Error:* \`${error.message}\`\n*Time:* ${new Date().toLocaleTimeString()}`;
+      const report = `⚠️ *AchekBot AI Error*\n\n*Chat:* \`${chatJid}\`\n*Google API Error:* \`${errorMessage}\`\n*Time:* ${new Date().toLocaleTimeString()}`;
       await client.sendMessage(primarySudo, { text: report });
     }
   } catch (e) {
@@ -104,11 +101,9 @@ async function imageToGenerativePart(imageBuffer, mimeType = "image/jpeg") {
 }
 
 function isChatbotEnabled(jid) {
-  // STRICT OVERRIDES: Manual settings always win
   if (chatbotStates.get(jid) === false) return false; 
   if (chatbotStates.get(jid) === true) return true;
 
-  // GLOBAL SETTINGS: Only apply if no strict override exists
   const isGroup = jid.includes("@g.us");
   if (isGroup && config.CHATBOT_ALL_GROUPS === "true") return true;
   if (!isGroup && config.CHATBOT_ALL_DMS === "true") return true;
@@ -127,10 +122,12 @@ function clearContext(jid) {
 async function getAIResponse(message, chatJid, options = {}) {
   const { imageBuffer = null, audioBuffer = null, isDeepThink = false } = options;
   const apiKey = config.GEMINI_API_KEY;
-  if (!apiKey) return "_❌ GEMINI_API_KEY not configured. Use `.setvar GEMINI_API_KEY your_key`_";
+  if (!apiKey) throw new Error("GEMINI_API_KEY is missing or invalid.");
 
   const currentModelIndex = modelStates.get(chatJid) || 0;
-  const currentModel = isDeepThink ? "gemini-3-deep-think" : models[currentModelIndex];
+  
+  // Use the new experimental thinking model if Deep Think is requested, else use standard.
+  const currentModel = isDeepThink ? "gemini-2.0-flash-thinking-exp-01-21" : models[currentModelIndex];
 
   try {
     const apiUrl = `${API_BASE_URL}${currentModel}:generateContent?key=${apiKey}`;
@@ -143,6 +140,7 @@ async function getAIResponse(message, chatJid, options = {}) {
       contents.push({ role: msg.role, parts: [{ text: msg.text }] });
     });
 
+    // 🎯 CORRECTED: Simple, clean payload that Google accepts
     const parts = [{ text: message || "Please analyse this media." }];
     if (imageBuffer) {
       const imgPart = await imageToGenerativePart(imageBuffer, "image/jpeg");
@@ -156,9 +154,7 @@ async function getAIResponse(message, chatJid, options = {}) {
 
     const payload = {
       contents: contents,
-      tools: [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }],
-      generationConfig: { maxOutputTokens: 1500, temperature: 0.75 },
-      ...(isDeepThink && { thinkingConfig: { includeThoughts: true } })
+      generationConfig: { maxOutputTokens: 2000, temperature: 0.75 }
     };
 
     const response = await axios.post(apiUrl, payload, { headers: { "Content-Type": "application/json" }, timeout: 25000 });
@@ -166,14 +162,10 @@ async function getAIResponse(message, chatJid, options = {}) {
     if (response.data?.candidates?.[0]?.content?.parts) {
       const aiParts = response.data.candidates[0].content.parts;
       let aiResponseText = "";
-      let thoughts = "";
       
       aiParts.forEach(p => {
-        if (p.thought) thoughts += `*Thinking Process:*\n> _${p.text}_\n\n`;
-        else if (p.text) aiResponseText += p.text;
+        if (p.text) aiResponseText += p.text;
       });
-
-      const finalOutput = isDeepThink ? `${thoughts}*Answer:*\n${aiResponseText}` : aiResponseText;
 
       if (!chatContexts.has(chatJid)) chatContexts.set(chatJid, []);
       const contextArray = chatContexts.get(chatJid);
@@ -183,12 +175,15 @@ async function getAIResponse(message, chatJid, options = {}) {
 
       if (contextArray.length > 20) contextArray.splice(0, contextArray.length - 20);
 
-      return finalOutput;
+      return aiResponseText;
     } else {
-      throw new Error("Unexpected API response format.");
+      throw new Error("Unexpected API response format from Google.");
     }
   } catch (error) {
-    console.error("AI API Error:", error.message);
+    // 🎯 CORRECTED: Extract the actual Google error message for the Sudo user
+    const exactError = error.response?.data?.error?.message || error.message;
+    console.error("AI API Error:", exactError);
+
     if (error.response && error.response.status === 429) {
       const nextModelIndex = currentModelIndex + 1;
       if (nextModelIndex < models.length) {
@@ -196,7 +191,9 @@ async function getAIResponse(message, chatJid, options = {}) {
         return "_🔄 Rate limit reached. Switching model and retrying..._"; 
       }
     }
-    return null; 
+    
+    // Throw the exact error so the command block catches it and sends it to you
+    throw new Error(exactError); 
   }
 }
 
@@ -273,7 +270,7 @@ Module(
           await setVar("CHATBOT_ALL_DMS", "false");
           return await message.sendReply(`*_🤖 Chatbot Disabled for All DMs_*`);
         } else {
-          chatbotStates.set(chatJid, false); // Strict false applied here
+          chatbotStates.set(chatJid, false);
           clearContext(chatJid);
           await saveChatbotData();
           return await message.sendReply(`*_🤖 Chatbot Disabled in this chat_*`);
@@ -331,10 +328,14 @@ Module(
       }
 
       const aiResponse = await getAIResponse(responseText, message.jid, { imageBuffer });
-      if (aiResponse) await message.sendReply(aiResponse);
+      
+      // Prevent it from sending the silent fallback rate-limit text if it's an auto-reply
+      if (aiResponse && !aiResponse.includes("Rate limit reached")) {
+          await message.sendReply(aiResponse);
+      }
 
     } catch (error) {
-      await reportToSudo(message.client, error, message.jid);
+      await reportToSudo(message.client, error.message, message.jid);
     }
   }
 );
@@ -354,9 +355,12 @@ Module(
     try {
       const audioBuffer = await message.download("buffer");
       const aiResponse = await getAIResponse("Listen to this audio and reply.", message.jid, { audioBuffer });
-      if (aiResponse) await message.sendReply(aiResponse);
+      
+      if (aiResponse && !aiResponse.includes("Rate limit reached")) {
+          await message.sendReply(aiResponse);
+      }
     } catch (error) {
-       await reportToSudo(message.client, error, message.jid);
+       await reportToSudo(message.client, error.message, message.jid);
     }
   }
 );
@@ -398,11 +402,11 @@ Module(
       if (response) {
         await message.edit(response, message.jid, sent_msg.key);
       } else {
-        await message.edit("❌ API Error. Sudo has been notified.", message.jid, sent_msg.key);
+        await message.edit("❌ API Error.", message.jid, sent_msg.key);
       }
     } catch (error) {
-      await reportToSudo(message.client, error, message.jid);
-      await message.edit("❌ Failed to process request.", message.jid, sent_msg.key);
+      await reportToSudo(message.client, error.message, message.jid);
+      await message.edit("❌ Failed to process request. Check Sudo DM for details.", message.jid, sent_msg.key);
     }
   }
 );
