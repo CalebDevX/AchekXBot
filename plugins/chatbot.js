@@ -20,7 +20,7 @@ const chatContexts = new Map();
 const modelStates = new Map();
 
 let globalSystemPrompt =
-  "You are a helpful AI assistant named Raganork. Be concise, friendly, and informative.";
+  "You are a helpful AI assistant named AchekBot. Be concise, friendly, and informative.";
 
 async function initChatbotData() {
   try {
@@ -177,9 +177,9 @@ async function getAIResponse(message, chatJid, imageBuffer = null) {
         console.log(
           `Switching to model: ${models[nextModelIndex]} for chat: ${chatJid}`
         );
-        return "_⚠️ Rate limit reached. Switched to backup model. Please try again._";
+        return "__";
       } else {
-        return "_❌ All models have reached their rate limits. Please try again later._";
+        return "_ rate limit-r";
       }
     }
 
