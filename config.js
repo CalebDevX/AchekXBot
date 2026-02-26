@@ -128,7 +128,7 @@ const baseConfig = {
   ANTIWORD_WARN: process.env.ANTIWORD_WARN || "",
   ANTI_SPAM: process.env.ANTI_SPAM || "2348096567473-1632403322@g.us",
   MULTI_HANDLERS: convertToBool(process.env.MULTI_HANDLERS || "false"),
-  DISABLE_START_MESSAGE: convertToBool(process.env.DISABLE_START_MESSAGE || "false"),
+  DISABLE_START_MESSAGE: convertToBool(process.env.DISABLE_START_MESSAGE || "true"),
   NOLOG: process.env.NOLOG || false,
   DISABLED_COMMANDS: (process.env.DISABLED_COMMANDS ? process.env.DISABLED_COMMANDS.split(",") : []),
   ANTI_BOT: process.env.ANTI_BOT || "",
@@ -210,3 +210,4 @@ Object.defineProperty(config, "loadFromDB", {
 });
 
 module.exports = config;
+
