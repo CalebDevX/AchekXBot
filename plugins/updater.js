@@ -19,7 +19,7 @@ async function isGitRepo() {
 
 async function getRemoteVersion() {
   try {
-    // 🎯 UPDATED: Now points strictly to your AchekXBot repository
+    // 🎯 Points strictly to your AchekXBot repository
     const remotePackageJsonUrl = `https://raw.githubusercontent.com/CalebDevX/AchekXBot/main/package.json`;
     const response = await axios.get(remotePackageJsonUrl);
     return response.data.version;
@@ -27,6 +27,17 @@ async function getRemoteVersion() {
     throw new Error("Failed to fetch remote version");
   }
 }
+
+// 🎯 SMART COMPARISON: Checks if Version A is strictly GREATER than Version B
+const isNewer = (remote, local) => {
+  const r = remote.split('.').map(Number);
+  const l = local.split('.').map(Number);
+  for (let i = 0; i < Math.max(r.length, l.length); i++) {
+    if ((r[i] || 0) > (l[i] || 0)) return true;
+    if ((r[i] || 0) < (l[i] || 0)) return false;
+  }
+  return false;
+};
 
 Module(
   {
@@ -45,7 +56,6 @@ Module(
 
     try {
       await git.fetch();
-      // Ensure we compare against your main branch
       const commits = await git.log(["main" + "..origin/" + "main"]);
       const localVersion = localPackageJson.version;
       let remoteVersion;
@@ -57,21 +67,20 @@ Module(
       }
 
       const hasCommits = commits.total > 0;
-      const versionChanged = remoteVersion !== localVersion;
+      // 🎯 FIXED: This will be false if remote is 6.2.26 but local is 3.0.0 (unless 6 > 3)
+      const isStableUpdate = isNewer(remoteVersion, localVersion);
 
-      if (!hasCommits && !versionChanged) {
-        return await message.sendReply("_AchekBot is fully up to date!_");
+      // 🎯 SILENCE LOGIC: If no new commits and version is NOT newer, stop the nagging.
+      if (!hasCommits && !isStableUpdate) {
+        if (!command) return await message.sendReply(`_AchekBot v${localVersion} is stable. No new updates found._`);
       }
-
-      const isBetaUpdate = hasCommits && !versionChanged;
-      const isStableUpdate = hasCommits && versionChanged;
 
       if (!command) {
         processingMsg = await message.sendReply("_Checking for updates..._");
         let updateInfo = "";
 
         if (isStableUpdate) {
-          updateInfo = `*_UPDATE AVAILABLE_*\n\n`;
+          updateInfo = `*_NEW ACHEK UPDATE AVAILABLE_*\n\n`;
           updateInfo += `📦 Current version: *${localVersion}*\n`;
           updateInfo += `📦 New version: *${remoteVersion}*\n\n`;
           updateInfo += `*_CHANGELOG:_*\n\n`;
@@ -79,36 +88,34 @@ Module(
             updateInfo += `${parseInt(i) + 1}• *${commits.all[i].message}*\n`;
           }
           updateInfo += `\n_Use "${handler}update start" to apply the update on Render._`;
-        } else if (isBetaUpdate) {
-          updateInfo = `*_BETA UPDATE AVAILABLE_*\n\n`;
+        } else if (hasCommits) {
+          updateInfo = `*_BETA/PATCH UPDATE AVAILABLE_*\n\n`;
           updateInfo += `📦 Current version: *${localVersion}*\n`;
-          updateInfo += `⚠️ New commits available (version unchanged)\n\n`;
+          updateInfo += `⚠️ New commits available (Version remains same)\n\n`;
           updateInfo += `*_CHANGELOG:_*\n\n`;
           for (let i in commits.all) {
             updateInfo += `${parseInt(i) + 1}• *${commits.all[i].message}*\n`;
           }
-          updateInfo += `\n_Use "${handler}update beta" to apply beta updates on Render._`;
+          updateInfo += `\n_Use "${handler}update start" to sync code._`;
         }
 
         return await message.edit(updateInfo, message.jid, processingMsg.key);
       }
 
-      if (command === "start" || command === "beta") {
+      if (command === "start") {
         processingMsg = await message.sendReply("_Starting Render update..._");
 
-        // Uses the deploy hook you will set in Render's environment variables
         const deployHookUrl = process.env.RENDER_DEPLOY_HOOK;
 
         if (deployHookUrl) {
-          // Trigger the Render rebuild via the hook (Render prefers POST for hooks, but GET often works too. POST is safer.)
           await axios.post(deployHookUrl);
           return await message.edit(
-            `_Render deploy triggered successfully! AchekBot version ${remoteVersion} will restart in a few minutes._`,
+            `_Render deploy triggered! AchekBot v${remoteVersion} will restart in a few minutes._`,
             message.jid,
             processingMsg.key
           );
         } else {
-          // Fallback if the bot isn't finding the Render URL
+          // Fallback
           await git.reset("hard", ["HEAD"]);
           await git.pull();
           await message.edit(
