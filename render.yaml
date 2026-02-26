@@ -14,3 +14,5 @@ services:
         value: "2348096567473" # Put your phone number here (no + sign)
       - key: STICKER_PACKNAME
         value: "Caleb-MD"
+      - key: RENDER_DEPLOY_HOOK
+        value: ""
